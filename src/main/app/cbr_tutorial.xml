@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="localhost" port="8081" doc:name="HTTP Listener Configuration"/>
+    <sub-flow name="cbr_tutorial_flow2">
+        <round-robin doc:name="Round Robin">
+            <processor-chain>
+                <logger message="No language specified. Using English as the default." level="INFO" doc:name="Logger"/>
+                <set-variable variableName="lang" value="English" doc:name="Set Language to English"/>
+                <set-payload value="Hello!" doc:name="Reply in English"/>
+            </processor-chain>
+            <processor-chain>
+                <logger message="No language specified. Using Malayalam as the default." level="INFO" doc:name="Logger"/>
+                <set-variable variableName="lang" value="Malayalam" doc:name="Set Language to Malayalam"/>
+                <set-payload value="Enthokkeyund  mashe!" doc:name="Reply in Malayalam"/>
+            </processor-chain>
+            <processor-chain>
+                <logger message="No language specified. Using Tamil as the default." level="INFO" doc:name="Logger"/>
+                <set-variable variableName="lang" value="Tamil" doc:name="Set Language to Tamil"/>
+                <set-payload value="Ennada Macha!" doc:name="Reply in Tamil"/>
+            </processor-chain>
+        </round-robin>
+    </sub-flow>
+    <flow name="cbr_tutorialFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/" doc:name="HTTP"/>
+        <expression-filter expression="#[message.inboundProperties.'http.request.uri' != '/favicon.ico']" doc:name="Expression"/>
+        <set-variable variableName="lang" value="#[message.inboundProperties.'http.query.params'.language]" doc:name="Set language Variable"/>
+        <choice doc:name="Choice">
+            <when expression="#[flowVars.lang == 'Spanish']">
+                <set-payload value="Hola!" doc:name="Reply in Spanish"/>
+            </when>
+            <when expression="#[flowVars.lang == 'French']">
+                <set-payload value="Bonjour!" doc:name="Reply in French"/>
+            </when>
+            <otherwise>
+                <flow-ref name="cbr_tutorial_flow2" doc:name="Flow Reference"/>
+            </otherwise>
+        </choice>
+        <logger message="The reply &quot;#[payload]&quot; means &quot;Hello&quot; in #[flowVars.lang]." level="INFO" doc:name="Logger"/>
+    </flow>
+</mule>
